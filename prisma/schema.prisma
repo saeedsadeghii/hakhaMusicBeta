@@ -1,0 +1,245 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  username      String?         @unique
+  email         String?         @unique
+  emailVerified DateTime?
+  image         String?
+  Session       Session[]
+  Account       Account?
+  // Optional for WebAuthn support
+  Authenticator Authenticator[]
+  LikeAlbum     LikeAlbum[]  @relation
+  LikeArtist    LikeArtist[]  @relation
+  LikeMusic     LikeMusic[]  @relation
+  LikePlaylist  LikePlaylist[]  @relation
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String  @unique
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? @db.Text
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User?   @relation(fields: [userId], references: [id])
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+ 
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id])
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  @@index([userId])
+}
+ 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@unique([identifier, token])
+}
+ 
+// Optional for WebAuthn support
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([userId, credentialID])
+}
+model musics {
+  id String @id @default(uuid())
+  name String
+  pathName String?
+  singer String
+  en_singer String?
+  orginal_singer_name String?
+  cover String 
+  url String
+  duration BigInt
+  like BigInt?
+  album String?
+  playlist String?
+  genre String?
+  en_genre String?
+  visited BigInt?
+  likes     LikeMusic[]  @relation
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+}
+model artists {
+  id String @id @default(uuid())
+  name String
+  en_singer String?
+  orginal_singer_name String?
+  image String
+  national String
+  discription String?
+  famous String?
+  followers BigInt
+  likes     LikeArtist[]  @relation
+}
+model albums {
+  id String @id @default(uuid())
+  name String
+  pathName String?
+  singer String
+  orginal_singer_name String?
+  duration BigInt
+  language String?
+  year DateTime
+  genre String?
+  cover String
+  like BigInt
+  en_singer String?
+  likes     LikeAlbum[]  @relation
+}
+model playlist {
+  id String @id @default(uuid())
+  name String
+  singer String
+  en_singer String
+  orginal_singer_name String?
+  pathName String?
+  genre String
+  en_genre String
+  cover String  
+  date DateTime?
+  visited BigInt?
+  likes     LikePlaylist[]  @relation
+}
+model LikeMusic {
+  id        String  @id @default(cuid())
+  userId    String
+  contentId   String
+  user      User    @relation(fields: [userId], references: [id])
+  music     musics  @relation(fields: [contentId], references: [id],map: "LikeToMusic")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, contentId])
+}
+model LikeAlbum {
+  id        String  @id @default(cuid())
+  userId    String
+  contentId   String
+  user      User    @relation(fields: [userId], references: [id])
+  album     albums @relation(fields: [contentId], references: [id],map: "LikeToAlbum")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, contentId])
+}
+model LikeArtist {
+  id        String  @id @default(cuid())
+  userId    String
+  contentId   String
+  user      User    @relation(fields: [userId], references: [id])
+  artist    artists  @relation(fields: [contentId], references: [id],map: "LikeToArtist")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, contentId])
+}
+model LikePlaylist {
+  id        String  @id @default(cuid())
+  userId    String
+  contentId   String
+  user      User    @relation(fields: [userId], references: [id])
+  playlist  playlist @relation(fields: [contentId], references: [id],map: "LikeToPlaylist")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, contentId])
+}
+// model Account {
+//   id                 String  @id @default(cuid())
+//   userId             String  @map("user_id")
+//   type               String
+//   provider           String
+//   providerAccountId  String  @map("provider_account_id")
+//   refresh_token      String? @db.Text
+//   access_token       String? @db.Text
+//   expires_at         Int?
+//   token_type         String?
+//   scope              String?
+//   id_token           String? @db.Text
+//   session_state      String?
+ 
+//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+//   @@unique([provider, providerAccountId])
+//   @@map("accounts")
+// }
+ 
+// model Session {
+//   id           String   @id @default(cuid())
+//   sessionToken String   @unique @map("session_token")
+//   userId       String   @map("user_id")
+//   expires      DateTime
+//   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+//   @@map("sessions")
+// }
+ 
+// model User {
+//   id            String    @id @default(cuid())
+//   name          String?
+//   email         String?   @unique
+//   emailVerified DateTime? @map("email_verified")
+//   image         String?
+//   accounts      Account[]
+//   sessions      Session[]
+ 
+//   @@map("users")
+// }
+ 
+// model VerificationToken {
+//   identifier String
+//   token      String
+//   expires    DateTime
+ 
+//   @@unique([identifier, token])
+//   @@map("verificationtokens")
+// }
