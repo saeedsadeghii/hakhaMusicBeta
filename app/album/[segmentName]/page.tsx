@@ -63,6 +63,7 @@ const page = async ({ params }: { params: any }) => {
   return (
     <article className="flex flex-col gap-y-7 md:gap-y-0">
       <div
+        key={album?.id}
         className={`w-full shadow-md md:rounded-3xl md:p-5 pt-5 flex flex-col justify-center md:justify-start items-center md:items-start md:flex-row md:gap-x-8`}
       >
         <Image
